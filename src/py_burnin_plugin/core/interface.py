@@ -155,7 +155,7 @@ class PluginInterface:
             msg = f"Status must be less than {PLUGIN_MAXDISPLAYTEXT} characters"
             raise ValidationError(msg)
 
-        strn_clean_cpy(self._struct.OUT_szStatus, status, PLUGIN_MAXDISPLAYTEXT)
+        self._struct.OUT_szStatus = status.encode()
         self._struct.OUT_bNewStatus = True
         self._last_status_update = datetime.now()
 
@@ -209,7 +209,7 @@ class PluginInterface:
             msg = f"Error message must be less than {PLUGIN_MAXERRORTEXT} characters"
             raise ValidationError(msg)
 
-        self._struct.OUT_szError = bytes(message)
+        self._struct.OUT_szError = message.encode()
         self._struct.OUT_bNewError = True
         self._last_error_update = datetime.now()
 
@@ -250,7 +250,7 @@ class PluginInterface:
             msg = f"Error message must be less than {PLUGIN_MAXERRORTEXTLONG} characters"
             raise ValidationError(msg)
 
-        strn_clean_cpy(self._struct.OUT_szErrorLong, message, PLUGIN_MAXERRORTEXTLONG)
+        self._struct.OUT_szErrorLong = message.encode()
 
     # Operation metrics
     @property
@@ -302,8 +302,7 @@ class PluginInterface:
     def write_label(self, label: str) -> None:
         """Set write operation label."""
         self._validate_label(label)
-        strn_clean_cpy(self._struct.OUT_szWriteOps, label, PLUGIN_MAXDISPLAYTEXT)
-
+        self._struct.OUT_szWriteOps = label.encode()
 
     @property
     def read_label(self) -> str:
@@ -314,7 +313,7 @@ class PluginInterface:
     def read_label(self, label: str) -> None:
         """Set read operation label."""
         self._validate_label(label)
-        strn_clean_cpy(self._struct.OUT_szReadOps, label, PLUGIN_MAXDISPLAYTEXT)
+        self._struct.OUT_szReadOps = label.encode()
 
 
     @property
@@ -326,7 +325,7 @@ class PluginInterface:
     def verify_label(self, label: str) -> None:
         """Set verify operation label."""
         self._validate_label(label)
-        strn_clean_cpy(self._struct.OUT_szVerifyOps, label, PLUGIN_MAXDISPLAYTEXT)
+        self._struct.OUT_szVerifyOps = label.encode()
 
 
     # User-defined fields
@@ -393,8 +392,8 @@ class PluginInterface:
 
         label_attr, value_attr, enabled_attr, new_value_attr = field_map[field_id]
 
-        strn_clean_cpy(getattr(self._struct, label_attr), label, PLUGIN_MAXDISPLAYTEXT)
-        strn_clean_cpy(getattr(self._struct, value_attr), value, PLUGIN_MAXDISPLAYTEXT)
+        setattr(self._struct, label_attr, label.encode())
+        setattr(self._struct, value_attr, value.encode())
 
         setattr(self._struct, enabled_attr, enabled)
 
@@ -412,7 +411,7 @@ class PluginInterface:
     def window_title(self, title: str) -> None:
         """Set window title."""
         self._validate_label(title)
-        strn_clean_cpy(self._struct.OUT_szWindowTitle, title, PLUGIN_MAXDISPLAYTEXT)
+        self._struct.OUT_szWindowTitle = title.encode()
 
     @property
     def display_text_set(self) -> bool:
