@@ -1,19 +1,19 @@
 [project]
 name = "py-burnin-plugin"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "Python SDK for Passmark Burnin Plugin"
 readme = "README.md"
 authors = [
     { name = "Wei Jing", email = "weilking@gmail.com" }
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = []
 
 [project.scripts]
 py-burnin-plugin = "py_burnin_plugin:main"
 
 [build-system]
-requires = ["uv_build>=0.8.15,<0.9.0"]
+requires = ["uv_build>=0.8.15"]
 build-backend = "uv_build"
 
 [dependency-groups]

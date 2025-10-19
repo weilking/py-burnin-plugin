@@ -1,16 +1,18 @@
 from .core import (
+    BurnInPlugin,
     ConnectionError,
     ErrorSeverity,
     InterfaceError,
-    PluginError,
-    StatusCode,
-    ValidationError,
     PluginConnection,
+    PluginError,
     PluginInterface,
     PluginInterfaceStructure,
+    StatusCode,
+    ValidationError,
 )
 
 __all__ = [
+    "BurnInPlugin",
     "ConnectionError",
     "ErrorSeverity",
     "InterfaceError",

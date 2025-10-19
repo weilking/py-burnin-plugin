@@ -111,14 +111,14 @@ class PluginConnection:
     def connect(self, shared_memory_name: str, timeout_ms: int = CONNECTION_TIMEOUT) -> bool:
         """
         Connect to BurnInTest shared memory.
-        
+
         Args:
             shared_memory_name: Name of shared memory object (must start with 'BI')
             timeout_ms: Connection timeout in milliseconds
-            
+
         Returns:
             True if connection successful, False otherwise
-            
+
         Raises:
             ConnectionError: If connection fails
             ValidationError: If shared_memory_name is invalid
@@ -220,10 +220,10 @@ class PluginConnection:
     def get_interface(self) -> PluginInterface:
         """
         Get the plugin interface.
-        
+
         Returns:
             PluginInterface instance
-            
+
         Raises:
             ConnectionError: If not connected
         """
@@ -243,9 +243,9 @@ class PluginConnection:
             self._interface.interface_version = 4
 
             # Set initial labels
-            self._interface.write_label = "Write (MBytes):"
-            self._interface.read_label = "Read (MBytes):"
-            self._interface.verify_label = "Verify (MBytes):"
+            self._interface.write_label = "Write:"
+            self._interface.read_label = "Read:"
+            self._interface.verify_label = "Verify:"
 
             # Set initial status
             self._interface.status = "Initializing"

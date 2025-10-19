@@ -1,8 +1,6 @@
 from ctypes import Structure, c_bool, c_char, c_int, c_int64, c_uint
 from datetime import datetime
 
-from ..utils import strn_clean_cpy
-
 from .common import (
     PLUGIN_MAXDISPLAYTEXT,
     PLUGIN_MAXERRORTEXT,
