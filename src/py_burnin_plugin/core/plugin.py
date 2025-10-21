@@ -1,12 +1,13 @@
-"""
-BurnInTest SDK - Base Plugin Class
+"""BurnInTest SDK - Base Plugin Class.
 
 Abstract base class for all BurnInTest plugins. Provides the plugin
 lifecycle framework and common functionality.
 """
 
 import importlib.metadata
+import json
 import logging
+import os
 import time
 from abc import ABC, abstractmethod
 
@@ -15,8 +16,7 @@ from ..core.connection import PluginConnection
 
 
 class BurnInPlugin(ABC):
-    """
-    Abstract base class for BurnInTest plugins.
+    """Abstract base class for BurnInTest plugins.
 
     Provides the plugin lifecycle framework and common functionality.
     Subclasses must implement the abstract methods to define their
@@ -27,12 +27,12 @@ class BurnInPlugin(ABC):
                  plugin_name: str,
                  logger: logging.Logger | None = None,
                  delay: float = 0.02) -> None:
-        """
-        Initialize the plugin.
+        """Initialize the plugin.
 
         Args:
-            plugin_name: Name of the plugin
-            logger: Optional logger instance
+            plugin_name (str): Name of the plugin.
+            logger (logging.Logger | None): Optional logger instance.
+            delay (float): Delay between operations in seconds.
         """
         self.plugin_name = plugin_name
         self._logger = logger or logging.getLogger(f"{__name__}.{plugin_name}")
@@ -47,6 +47,9 @@ class BurnInPlugin(ABC):
         self._start_time: float | None = None
 
         self._delay = delay
+
+        # Configuration storage
+        self._config = {}
 
         self._logger.info(f"Plugin '{plugin_name}' initialized")
 
@@ -65,15 +68,14 @@ class BurnInPlugin(ABC):
         return importlib.metadata.version("py-burnin-plugin")
 
     def run(self, shared_memory_name: str) -> None:
-        """
-        Run the plugin with the specified shared memory.
+        """Run the plugin with the specified shared memory.
 
         Args:
-            shared_memory_name: Name of shared memory object
+            shared_memory_name (str): Name of shared memory object.
 
         Raises:
-            ConnectionError: If connection fails
-            PluginError: If plugin execution fails
+            ConnectionError: If connection fails.
+            PluginError: If plugin execution fails.
         """
         if self._is_running:
             raise PluginError("Plugin is already running")
@@ -143,17 +145,19 @@ class BurnInPlugin(ABC):
                 # Handle duty cycle delay
                 self._handle_duty_cycle()
 
+            # Handle when test is finished.
+            self.on_test_end()
+
         except Exception as e:
             self._logger.exception(f"Error in plugin loop: {e}")
             self.on_error(PluginError(f"Error in plugin loop: {e}"))
             raise
 
     def _execute_test_phases(self) -> bool:
-        """
-        Execute all test phases for current cycle.
+        """Execute all test phases for current cycle.
 
         Returns:
-            True if all phases executed successfully, False otherwise
+            bool: True if all phases executed successfully, False otherwise.
         """
         phases = [
             ("Write", self.execute_write_phase),
@@ -206,7 +210,14 @@ class BurnInPlugin(ABC):
                 time.sleep(sleep_time)
 
     def _get_error_severity(self, error: str | None) -> ErrorSeverity:
-        """Determine error severity based on error message."""
+        """Determine error severity based on error message.
+
+        Args:
+            error (str | None): Error message to analyze.
+
+        Returns:
+            ErrorSeverity: Determined severity level.
+        """
         if not error:
             return ErrorSeverity.WARNING
 
@@ -255,31 +266,28 @@ class BurnInPlugin(ABC):
 
     @abstractmethod
     def execute_write_phase(self) -> bool:
-        """
-        Execute the write phase of the test.
+        """Execute the write phase of the test.
 
         Returns:
-            TestResult indicating success/failure and operation count
+            bool: True if write phase executed successfully, False otherwise.
         """
         pass
 
     @abstractmethod
     def execute_read_phase(self) -> bool:
-        """
-        Execute the read phase of the test.
+        """Execute the read phase of the test.
 
         Returns:
-            TestResult indicating success/failure and operation count
+            bool: True if read phase executed successfully, False otherwise.
         """
         pass
 
     @abstractmethod
     def execute_verify_phase(self) -> bool:
-        """
-        Execute the verify phase of the test.
+        """Execute the verify phase of the test.
 
         Returns:
-            TestResult indicating success/failure and operation count
+            bool: True if verify phase executed successfully, False otherwise.
         """
         pass
 
@@ -292,58 +300,145 @@ class BurnInPlugin(ABC):
         self._logger.info("Plugin stopped")
 
     def on_cycle_start(self, cycle: int) -> None:
-        """
-        Called at the start of each test cycle.
+        """Called at the start of each test cycle.
 
         Args:
-            cycle: Current cycle number
+            cycle (int): Current cycle number.
         """
         self._logger.debug(f"Cycle {cycle} started")
 
     def on_cycle_end(self, cycle: int) -> None:
-        """
-        Called at the end of each test cycle.
+        """Called at the end of each test cycle.
 
         Args:
-            cycle: Current cycle number
+            cycle (int): Current cycle number.
         """
         self._logger.debug(f"Cycle {cycle} ended")
 
     def on_error(self, error: PluginError) -> None:
-        """
-        Called when an error occurs.
+        """Called when an error occurs.
 
         Args:
-            error: The error that occurred
+            error (PluginError): The error that occurred.
         """
         self._logger.error(f"Plugin error: {error}")
 
     # Utility methods for subclasses
 
     def get_interface(self):
-        """
-        Get the plugin interface for direct access.
+        """Get the plugin interface for direct access.
 
         Returns:
-            PluginInterface instance (available during execution)
+            PluginInterface: Interface instance (available during execution).
         """
         return self._interface
 
     def log_info(self, message: str) -> None:
-        """Log info message."""
+        """Log info message.
+
+        Args:
+            message (str): Message to log.
+        """
         self._logger.info(message)
 
     def log_warning(self, message: str) -> None:
-        """Log warning message."""
+        """Log warning message.
+
+        Args:
+            message (str): Message to log.
+        """
         self._logger.warning(message)
 
     def log_error(self, message: str) -> None:
-        """Log error message."""
+        """Log error message.
+
+        Args:
+            message (str): Message to log.
+        """
         self._logger.error(message)
 
     def log_debug(self, message: str) -> None:
-        """Log debug message."""
+        """Log debug message.
+
+        Args:
+            message (str): Message to log.
+        """
         self._logger.debug(message)
+
+    def load_from_config(self, config_filename: str = "") -> None:
+        """Load configuration fields from a JSON file and store in self._config.
+
+        Args:
+            config_filename (str): Name of the JSON config file. If empty, automatically
+                loads from the same directory as the plugin code.
+
+        Raises:
+            FileNotFoundError: If the config file is not found.
+            json.JSONDecodeError: If the config file is not valid JSON.
+            PluginError: If there's an error loading the configuration.
+        """
+        try:
+            # Determine config file path
+            if not config_filename:
+                # Use the same directory as the plugin code
+                plugin_dir = os.path.dirname(__file__)
+                config_filename = os.path.join(plugin_dir, "config.json")
+                self._logger.info(f"No config filename provided, using default: {config_filename}")
+            else:
+                # If relative path, make it relative to the plugin directory
+                if not os.path.isabs(config_filename):
+                    plugin_dir = os.path.dirname(__file__)
+                    config_filename = os.path.join(plugin_dir, config_filename)
+
+            # Check if file exists
+            if not os.path.exists(config_filename):
+                raise FileNotFoundError(f"Configuration file not found: {config_filename}")
+
+            # Load and parse JSON
+            with open(config_filename, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+
+            # Store configuration
+            self._config = config_data
+            self._logger.info(f"Configuration loaded successfully from: {config_filename}")
+
+        except FileNotFoundError as e:
+            self._logger.exception(f"Configuration file not found: {e}")
+            raise
+        except json.JSONDecodeError as e:
+            self._logger.exception(f"Invalid JSON in configuration file: {e}")
+            raise
+        except Exception as e:
+            self._logger.exception(f"Error loading configuration: {e}")
+            raise PluginError(f"Failed to load configuration: {e}")
+
+    def get_config_value(self, field_name: str, default_value=None):
+        """Get a value from the configuration by field name.
+
+        Args:
+            field_name (str): Name of the field to retrieve. Supports dot notation for nested fields
+                (e.g., "database.host" for config["database"]["host"]).
+            default_value: Value to return if field is not found.
+
+        Returns:
+            The field value if found, otherwise the default_value.
+        """
+        try:
+            # Handle nested field access with dot notation
+            keys = field_name.split('.')
+            value = self._config
+
+            for key in keys:
+                if isinstance(value, dict) and key in value:
+                    value = value[key]
+                else:
+                    return default_value
+
+            return value
+
+        except Exception as e:
+            self._logger.warning(f"Error accessing config field '{field_name}': {e}")
+            return default_value
 
     def __str__(self) -> str:
         """String representation of plugin state."""
