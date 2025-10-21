@@ -199,11 +199,7 @@ class PluginInterface:
             msg = "Error message must be a string"
             raise ValidationError(msg)
 
-        if len(message) >= PLUGIN_MAXERRORTEXT:
-            msg = f"Error message must be less than {PLUGIN_MAXERRORTEXT} characters"
-            raise ValidationError(msg)
-
-        self._struct.OUT_szError = message.encode()
+        self._struct.OUT_szError = message[:PLUGIN_MAXERRORTEXT].encode()
         self._struct.OUT_bNewError = True
         self._last_error_update = datetime.now()
 
