@@ -61,22 +61,20 @@ class PluginInterfaceStructure(Structure):
 
 
 class PluginInterface:
-    """
-    High-level interface for BurnInTest PLUGININTERFACE structure.
+    """High-level interface for BurnInTest PLUGININTERFACE structure.
 
     Provides type-safe methods for accessing and manipulating shared memory
     fields with proper validation and error handling.
     """
 
     def __init__(self, structure: PluginInterfaceStructure) -> None:
-        """
-        Initialize interface with PLUGININTERFACE structure.
+        """Initialize interface with PLUGININTERFACE structure.
 
         Args:
-            structure: The shared memory structure instance
+            structure (PluginInterfaceStructure): The shared memory structure instance.
 
         Raises:
-            ValidationError: If structure is invalid
+            ValidationError: If structure is invalid.
         """
         if not isinstance(structure, PluginInterfaceStructure):
             msg = "Invalid PLUGININTERFACE structure provided"
@@ -136,14 +134,13 @@ class PluginInterface:
 
     @status.setter
     def status(self, status: str) -> None:
-        """
-        Set current status text.
+        """Set current status text.
 
         Args:
-            status: Status text
+            status (str): Status text.
 
         Raises:
-            ValidationError: If status is too long
+            ValidationError: If status is too long.
         """
         if not isinstance(status, str):
             msg = "Status must be a string"
@@ -190,14 +187,13 @@ class PluginInterface:
 
     @error_message.setter
     def error_message(self, message: str) -> None:
-        """
-        Set current error message.
+        """Set current error message.
 
         Args:
-            message: Error message (max 99 characters)
+            message (str): Error message (max 99 characters).
 
         Raises:
-            ValidationError: If message is too long
+            ValidationError: If message is too long.
         """
         if not isinstance(message, str):
             msg = "Error message must be a string"
@@ -231,14 +227,13 @@ class PluginInterface:
 
     @error_long.setter
     def error_long(self, message: str) -> None:
-        """
-        Set long error message.
+        """Set long error message.
 
         Args:
-            message: Long error message (max 200 characters)
+            message (str): Long error message (max 200 characters).
 
         Raises:
-            ValidationError: If message is too long
+            ValidationError: If message is too long.
         """
         if not isinstance(message, str):
             msg = "Error message must be a string"
@@ -328,17 +323,16 @@ class PluginInterface:
 
     # User-defined fields
     def get_user_field(self, field_id: int) -> dict[str, str]:
-        """
-        Get user-defined field configuration and value.
+        """Get user-defined field configuration and value.
 
         Args:
-            field_id: Field ID (1-6)
+            field_id (int): Field ID (1-6).
 
         Returns:
-            Dictionary with 'label', 'value', and 'enabled' keys
+            dict[str, str]: Dictionary with 'label', 'value', and 'enabled' keys.
 
         Raises:
-            ValidationError: If field_id is invalid
+            ValidationError: If field_id is invalid.
         """
         if not 1 <= field_id <= 6:
             msg = "Field ID must be between 1 and 6"
@@ -362,17 +356,16 @@ class PluginInterface:
         }
 
     def set_user_field(self, field_id: int, label: str, value: str, enabled: bool = True) -> None:
-        """
-        Set user-defined field configuration and value.
+        """Set user-defined field configuration and value.
 
         Args:
-            field_id: Field ID (1-6)
-            label: Field label (max 19 characters)
-            value: Field value (max 19 characters)
-            enabled: Whether field is enabled
+            field_id (int): Field ID (1-6).
+            label (str): Field label (max 19 characters).
+            value (str): Field value (max 19 characters).
+            enabled (bool): Whether field is enabled.
 
         Raises:
-            ValidationError: If parameters are invalid
+            ValidationError: If parameters are invalid.
         """
         if not 1 <= field_id <= 6:
             msg = "Field ID must be between 1 and 6"
@@ -432,13 +425,12 @@ class PluginInterface:
         self._struct.OUT_bTestStopped = stopped
 
     def set_error(self, message: str, severity: ErrorSeverity, long_message: str | None = None) -> None:
-        """
-        Set error information.
+        """Set error information.
 
         Args:
-            message: Error message
-            severity: Error severity
-            long_message: Optional long error message
+            message (str): Error message.
+            severity (ErrorSeverity): Error severity.
+            long_message (str | None): Optional long error message.
         """
         self.error_message = message
         self.error_severity = severity
@@ -450,13 +442,12 @@ class PluginInterface:
     def update_metrics(self, write_ops: int | None = None,
                       read_ops: int | None = None,
                       verify_ops: int | None = None) -> None:
-        """
-        Update operation metrics.
+        """Update operation metrics.
 
         Args:
-            write_ops: Write operation count
-            read_ops: Read operation count  
-            verify_ops: Verify operation count
+            write_ops (int | None): Write operation count.
+            read_ops (int | None): Read operation count.
+            verify_ops (int | None): Verify operation count.
         """
         if write_ops is not None:
             self.write_operations = write_ops
@@ -469,13 +460,13 @@ class PluginInterface:
                          read_ops: int = 0,
                          verify_ops: int = 0,
                          error_count: int = 0) -> None:
-        """
-        Increment operation metrics.
+        """Increment operation metrics.
 
         Args:
-            write_ops: Write operations to add
-            read_ops: Read operations to add
-            verify_ops: Verify operations to add
+            write_ops (int): Write operations to add.
+            read_ops (int): Read operations to add.
+            verify_ops (int): Verify operations to add.
+            error_count (int): Error count to add.
         """
         if write_ops > 0:
             self.write_operations += write_ops
@@ -496,7 +487,14 @@ class PluginInterface:
 
     # Private helper methods
     def _validate_label(self, label: str) -> None:
-        """Validate label string."""
+        """Validate label string.
+
+        Args:
+            label (str): Label to validate.
+
+        Raises:
+            ValidationError: If label is invalid.
+        """
         if not isinstance(label, str):
             msg = "Label must be a string"
             raise ValidationError(msg)
@@ -506,7 +504,11 @@ class PluginInterface:
             raise ValidationError(msg)
 
     def get_structure(self) -> PluginInterfaceStructure:
-        """Get the underlying PLUGININTERFACE structure."""
+        """Get the underlying PLUGININTERFACE structure.
+
+        Returns:
+            PluginInterfaceStructure: The underlying structure.
+        """
         return self._struct
 
     def __str__(self) -> str:

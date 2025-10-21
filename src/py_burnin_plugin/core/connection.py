@@ -54,7 +54,11 @@ class WindowsAPI:
         self.FormatMessage = self.kernel32.FormatMessageW
 
     def get_last_error(self) -> str:
-        """Get formatted Windows error message."""
+        """Get formatted Windows error message.
+
+        Returns:
+            str: Formatted error message.
+        """
         error_code = self.GetLastError()
         if error_code == 0:
             return "No error"
@@ -74,19 +78,17 @@ class WindowsAPI:
         return f"Error {error_code}: {buffer.value.strip()}"
 
 class PluginConnection:
-    """
-    Manages shared memory connection to BurnInTest.
+    """Manages shared memory connection to BurnInTest.
 
     Handles connection lifecycle, error recovery, and provides
     access to the PluginInterface for communication.
     """
 
     def __init__(self, logger: logging.Logger | None = None) -> None:
-        """
-        Initialize connection manager.
+        """Initialize connection manager.
 
         Args:
-            logger: Optional logger instance
+            logger (logging.Logger | None): Optional logger instance.
         """
         self._api = WindowsAPI()
         self._logger = logger or logging.getLogger(__name__)
@@ -109,19 +111,18 @@ class PluginConnection:
         return self._shared_memory_name
 
     def connect(self, shared_memory_name: str, timeout_ms: int = CONNECTION_TIMEOUT) -> bool:
-        """
-        Connect to BurnInTest shared memory.
+        """Connect to BurnInTest shared memory.
 
         Args:
-            shared_memory_name: Name of shared memory object (must start with 'BI')
-            timeout_ms: Connection timeout in milliseconds
+            shared_memory_name (str): Name of shared memory object (must start with 'BI').
+            timeout_ms (int): Connection timeout in milliseconds.
 
         Returns:
-            True if connection successful, False otherwise
+            bool: True if connection successful, False otherwise.
 
         Raises:
-            ConnectionError: If connection fails
-            ValidationError: If shared_memory_name is invalid
+            ConnectionError: If connection fails.
+            ValidationError: If shared_memory_name is invalid.
         """
         if self._is_connected:
             self._logger.warning("Already connected to shared memory")
@@ -218,14 +219,13 @@ class PluginConnection:
         self._logger.info("Disconnected from shared memory")
 
     def get_interface(self) -> PluginInterface:
-        """
-        Get the plugin interface.
+        """Get the plugin interface.
 
         Returns:
-            PluginInterface instance
+            PluginInterface: PluginInterface instance.
 
         Raises:
-            ConnectionError: If not connected
+            ConnectionError: If not connected.
         """
         if not self._is_connected or not self._interface:
             msg = "Not connected to shared memory"
@@ -291,11 +291,24 @@ class PluginConnection:
                 self._file_mapping_handle = None
 
     def __enter__(self):
-        """Context manager entry."""
+        """Context manager entry.
+
+        Returns:
+            PluginConnection: Self for context manager usage.
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit with automatic cleanup."""
+        """Context manager exit with automatic cleanup.
+
+        Args:
+            exc_type: Exception type (if any).
+            exc_val: Exception value (if any).
+            exc_tb: Exception traceback (if any).
+
+        Returns:
+            bool: False to not suppress exceptions.
+        """
         self.disconnect()
 
         # Don't suppress exceptions
@@ -305,7 +318,11 @@ class PluginConnection:
         return False
 
     def __str__(self) -> str:
-        """String representation of connection state."""
+        """String representation of connection state.
+
+        Returns:
+            str: Human-readable string representation.
+        """
         if self._is_connected:
             return (
                 f"PluginConnection(connected=True, name='{self._shared_memory_name}', "
@@ -315,7 +332,11 @@ class PluginConnection:
             return "PluginConnection(connected=False)"
 
     def __repr__(self) -> str:
-        """Detailed string representation."""
+        """Detailed string representation.
+
+        Returns:
+            str: Detailed string representation for debugging.
+        """
         return (
             f"PluginConnection(shared_memory_name={self._shared_memory_name!r}, "
             f"is_connected={self._is_connected}, "
