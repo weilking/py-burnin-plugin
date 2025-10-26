@@ -145,9 +145,6 @@ class BurnInPlugin(ABC):
                 # Handle duty cycle delay
                 self._handle_duty_cycle()
 
-            # Handle when test is finished.
-            self.on_test_end()
-
         except Exception as e:
             self._logger.exception(f"Error in plugin loop: {e}")
             self.on_error(PluginError(f"Error in plugin loop: {e}"))
